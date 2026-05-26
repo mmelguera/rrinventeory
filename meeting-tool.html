@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meeting Inventory Tool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;1,9..144,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f2eb;
+    --surface: #fffef9;
+    --surface2: #f0ede4;
+    --border: #d8d3c8;
+    --border-strong: #b8b0a0;
+    --text: #1c1a16;
+    --text-muted: #6b6457;
+    --text-faint: #9c9080;
+    --accent: #2d5a3d;
+    --accent-light: #e8f0eb;
+    --accent-border: #a8c8b0;
+    --warn: #7a3b1e;
+    --warn-light: #f5ece6;
+    --warn-border: #d4a090;
+    --chip-gold: #8a6a1a;
+    --chip-gold-bg: #faf4e0;
+    --chip-gold-border: #d4bc70;
+    --radius: 8px;
+    --radius-lg: 14px;
+    --font-main: 'Fraunces', Georgia, serif;
+    --font-mono: 'DM Mono', 'Courier New', monospace;
+  }
+
+  body {
+    font-family: var(--font-main);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 1.25rem 2rem;
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+  }
+
+  header h1 {
+    font-size: 1.3rem;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--text);
+  }
+
+  header span {
+    font-size: 0.85rem;
+    color: var(--text-faint);
+    font-style: italic;
+  }
+
+  .config-notice {
+    background: var(--warn-light);
+    border: 1px solid var(--warn-border);
+    border-radius: var(--radius);
+    padding: 0.9rem 1.25rem;
+    margin: 1.5rem 2rem 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    font-size: 0.88rem;
+    color: var(--warn);
+    line-height: 1.5;
+  }
+
+  .config-notice.hidden { display: none; }
+
+  .config-notice strong {
+    font-weight: 500;
+    display: block;
+    margin-bottom: 0.2rem;
+  }
+
+  .config-notice a {
+    color: var(--warn);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  nav {
+    display: flex;
+    gap: 0;
+    padding: 0 2rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  nav button {
+    font-family: var(--font-main);
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: var(--text-muted);
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 0.85rem 1.25rem;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+    letter-spacing: 0.01em;
+  }
+
+  nav button:hover { color: var(--text); }
+
+  nav button.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    font-weight: 500;
+  }
+
+  main {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .section-header {
+    margin-bottom: 1.5rem;
+  }
+
+  .section-header h2 {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 0.3rem;
+  }
+
+  .section-header p {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .item-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.85rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+
+  .item-row:last-child { border-bottom: none; }
+  .item-row:hover { background: var(--surface2); }
+
+  .item-row.disabled { opacity: 0.4; pointer-events: none; }
+
+  .item-name {
+    font-size: 0.9rem;
+    color: var(--text);
+  }
+
+  .item-sub {
+    font-size: 0.78rem;
+    color: var(--text-faint);
+    margin-top: 0.1rem;
+    font-style: italic;
+  }
+
+  .qty-input {
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    width: 72px;
+    text-align: center;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.45rem 0.5rem;
+    background: var(--bg);
+    color: var(--text);
+    transition: border-color 0.15s;
+    -moz-appearance: textfield;
+  }
+
+  .qty-input::-webkit-outer-spin-button,
+  .qty-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  .qty-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: var(--surface);
+  }
+
+  .qty-input.highlight { border-color: var(--accent); background: var(--accent-light); }
+
+  .count-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.85rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .count-row:last-child { border-bottom: none; }
+
+  .target-label {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--text-faint);
+    white-space: nowrap;
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+    flex-shrink: 0;
+    display: none;
+  }
+
+  .status-dot.ok { background: #4a9460; display: block; }
+  .status-dot.low { background: #c0622a; display: block; }
+  .status-dot.exact { background: #4a9460; display: block; }
+
+  .actions {
+    padding: 1.5rem 0 0;
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  button.primary {
+    font-family: var(--font-main);
+    font-size: 0.9rem;
+    font-weight: 500;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    padding: 0.65rem 1.5rem;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    letter-spacing: 0.01em;
+  }
+
+  button.primary:hover { opacity: 0.88; }
+  button.primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  button.secondary {
+    font-family: var(--font-main);
+    font-size: 0.9rem;
+    font-weight: 400;
+    background: none;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.65rem 1.25rem;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  button.secondary:hover { background: var(--surface2); color: var(--text); }
+
+  .output-box {
+    margin-top: 1.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    display: none;
+  }
+
+  .output-box.visible { display: block; }
+
+  .output-header {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    padding: 0.75rem 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .output-header span {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .output-header button {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.3rem 0.75rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+
+  .output-header button:hover { background: var(--border); }
+
+  .output-text {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    line-height: 1.7;
+    padding: 1.25rem;
+    white-space: pre-wrap;
+    color: var(--text);
+  }
+
+  .print-btn {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.3rem 0.75rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: background 0.1s;
+    margin-left: 0.5rem;
+  }
+
+  .print-btn:hover { background: var(--border); }
+
+  .settings-section {
+    margin-bottom: 2rem;
+  }
+
+  .settings-section h3 {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.75rem;
+  }
+
+  .settings-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.85rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .settings-row:last-child { border-bottom: none; }
+
+  .sheet-config {
+    background: var(--accent-light);
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.88rem;
+    color: var(--accent);
+  }
+
+  .sheet-config label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: var(--accent);
+  }
+
+  .sheet-config input {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    width: 100%;
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius);
+    padding: 0.5rem 0.75rem;
+    background: var(--surface);
+    color: var(--text);
+  }
+
+  .sheet-config input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .sheet-config .hint {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-top: 0.4rem;
+    font-style: italic;
+  }
+
+  .save-row {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    margin-top: 1rem;
+  }
+
+  .save-status {
+    font-size: 0.82rem;
+    color: var(--text-faint);
+    font-style: italic;
+  }
+
+  .save-status.ok { color: #4a9460; }
+  .save-status.err { color: #c0622a; }
+
+  .chip-category {
+    background: var(--surface2);
+    padding: 0.5rem 1.25rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    border-bottom: 1px solid var(--border);
+  }
+
+  @media print {
+    header, nav, .actions, .output-header button, .print-btn { display: none !important; }
+    .output-box { border: none; }
+    .output-text { font-size: 12pt; }
+  }
+
+  @media (max-width: 600px) {
+    main { padding: 1rem; }
+    header { padding: 1rem; }
+    nav { padding: 0 1rem; }
+    .count-row { grid-template-columns: 1fr auto; }
+    .target-label { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Meeting Inventory</h1>
+  <span>literature &amp; chips tracker</span>
+</header>
+
+<div class="config-notice" id="configNotice">
+  <div>
+    <strong>Setup required</strong>
+    Open the <strong>Settings</strong> tab and enter your Google Sheet ID to connect this tool to your spreadsheet. 
+    See the <a href="SHEET_SETUP.md" target="_blank">setup guide</a> for instructions.
+  </div>
+</div>
+
+<nav>
+  <button class="active" onclick="showTab('lit')">Literature Count</button>
+  <button onclick="showTab('chips')">Chip Count</button>
+  <button onclick="showTab('settings')">Settings</button>
+</nav>
+
+<main>
+
+  <!-- LITERATURE COUNT TAB -->
+  <div class="tab-panel active" id="tab-lit">
+    <div class="section-header">
+      <h2>Literature Count</h2>
+      <p>Count what's on hand. Click "Generate Order" to see what needs to be ordered.</p>
+    </div>
+    <div class="card" id="litCountList">
+      <div style="padding:2rem; text-align:center; color:var(--text-faint); font-style:italic; font-size:0.9rem;">
+        Loading literature from settings…
+      </div>
+    </div>
+    <div class="actions">
+      <button class="primary" onclick="generateOrder('lit')">Generate Order</button>
+      <button class="secondary" onclick="clearCounts('lit')">Clear Counts</button>
+    </div>
+    <div class="output-box" id="litOutput">
+      <div class="output-header">
+        <span>Order Needed</span>
+        <div>
+          <button onclick="copyOutput('litOutputText')">Copy</button>
+          <button class="print-btn" onclick="printOutput('litOutputText')">Print</button>
+        </div>
+      </div>
+      <div class="output-text" id="litOutputText"></div>
+    </div>
+  </div>
+
+  <!-- CHIPS COUNT TAB -->
+  <div class="tab-panel" id="tab-chips">
+    <div class="section-header">
+      <h2>Chip Count</h2>
+      <p>Count what's on hand. Click "Generate Order" to see what needs to be ordered.</p>
+    </div>
+    <div class="card" id="chipsCountList">
+      <div style="padding:2rem; text-align:center; color:var(--text-faint); font-style:italic; font-size:0.9rem;">
+        Loading chips from settings…
+      </div>
+    </div>
+    <div class="actions">
+      <button class="primary" onclick="generateOrder('chips')">Generate Order</button>
+      <button class="secondary" onclick="clearCounts('chips')">Clear Counts</button>
+    </div>
+    <div class="output-box" id="chipsOutput">
+      <div class="output-header">
+        <span>Order Needed</span>
+        <div>
+          <button onclick="copyOutput('chipsOutputText')">Copy</button>
+          <button class="print-btn" onclick="printOutput('chipsOutputText')">Print</button>
+        </div>
+      </div>
+      <div class="output-text" id="chipsOutputText"></div>
+    </div>
+  </div>
+
+  <!-- SETTINGS TAB -->
+  <div class="tab-panel" id="tab-settings">
+    <div class="section-header">
+      <h2>Settings</h2>
+      <p>Configure your Google Sheet connection and set agreed-upon quantities for literature and chips.</p>
+    </div>
+
+    <div class="sheet-config">
+      <label>Google Sheet ID</label>
+      <input type="text" id="sheetId" placeholder="Paste your Sheet ID here (from the URL)" />
+      <p class="hint">From your sheet URL: docs.google.com/spreadsheets/d/<strong>[this part]</strong>/edit</p>
+    </div>
+
+    <!-- LITERATURE SETTINGS -->
+    <div class="settings-section">
+      <h3>Literature</h3>
+      <div class="card" id="litSettingsList">
+        <div style="padding:2rem; text-align:center; color:var(--text-faint); font-style:italic; font-size:0.9rem;">
+          Enter your Sheet ID above and click Load.
+        </div>
+      </div>
+      <div class="save-row">
+        <button class="primary" onclick="saveSettings('lit')">Save Literature</button>
+        <span class="save-status" id="litSaveStatus"></span>
+      </div>
+    </div>
+
+    <!-- CHIPS SETTINGS -->
+    <div class="settings-section">
+      <h3>Chips &amp; Coins</h3>
+      <div class="card" id="chipsSettingsList">
+        <div style="padding:2rem; text-align:center; color:var(--text-faint); font-style:italic; font-size:0.9rem;">
+          Enter your Sheet ID above and click Load.
+        </div>
+      </div>
+      <div class="save-row">
+        <button class="primary" onclick="saveSettings('chips')">Save Chips</button>
+        <span class="save-status" id="chipsSaveStatus"></span>
+      </div>
+    </div>
+
+    <div style="margin-top:0.5rem;">
+      <button class="secondary" onclick="loadFromSheet()">↺ Load from Sheet</button>
+    </div>
+
+  </div>
+</main>
+
+<script>
+// ─── CONFIG ──────────────────────────────────────────────────────────────────
+
+const DEFAULT_LIT = [
+  { name: "Basic Text", qty: 0 },
+  { name: "Just for Today", qty: 0 },
+  { name: "Living Clean", qty: 0 },
+  { name: "It Works: How and Why", qty: 0 },
+  { name: "Step Working Guides", qty: 0 },
+  { name: "Guiding Principles (Traditions)", qty: 0 },
+  { name: "In Times of Illness", qty: 0 },
+  { name: "For the Newcomer", qty: 0 },
+  { name: "White Booklet", qty: 0 },
+  { name: "NA Way of Life", qty: 0 },
+  { name: "PR Booklet", qty: 0 },
+  { name: "Today a New Beginning", qty: 0 },
+];
+
+const DEFAULT_CHIPS = [
+  // Welcome/keytag
+  { name: "Welcome Keytag", sub: "white — surrender", category: "Keytags", qty: 0 },
+  { name: "24 Hour Keytag", sub: "orange", category: "Keytags", qty: 0 },
+  { name: "30 Day Keytag", sub: "glow — 1 month", category: "Keytags", qty: 0 },
+  { name: "60 Day Keytag", sub: "bronze — 2 months", category: "Keytags", qty: 0 },
+  { name: "90 Day Keytag", sub: "red — 3 months", category: "Keytags", qty: 0 },
+  { name: "6 Month Keytag", sub: "dark blue — 6 months", category: "Keytags", qty: 0 },
+  { name: "9 Month Keytag", sub: "green — 9 months", category: "Keytags", qty: 0 },
+  // Coins — 1 to 50 years
+  { name: "I Year Coin", sub: "1 year", category: "Year Coins", qty: 0 },
+  { name: "II Year Coin", sub: "2 years", category: "Year Coins", qty: 0 },
+  { name: "III Year Coin", sub: "3 years", category: "Year Coins", qty: 0 },
+  { name: "IV Year Coin", sub: "4 years", category: "Year Coins", qty: 0 },
+  { name: "V Year Coin", sub: "5 years", category: "Year Coins", qty: 0 },
+  { name: "VI Year Coin", sub: "6 years", category: "Year Coins", qty: 0 },
+  { name: "VII Year Coin", sub: "7 years", category: "Year Coins", qty: 0 },
+  { name: "VIII Year Coin", sub: "8 years", category: "Year Coins", qty: 0 },
+  { name: "IX Year Coin", sub: "9 years", category: "Year Coins", qty: 0 },
+  { name: "X Year Coin", sub: "10 years", category: "Year Coins", qty: 0 },
+  { name: "XI Year Coin", sub: "11 years", category: "Year Coins", qty: 0 },
+  { name: "XII Year Coin", sub: "12 years", category: "Year Coins", qty: 0 },
+  { name: "XIII Year Coin", sub: "13 years", category: "Year Coins", qty: 0 },
+  { name: "XIV Year Coin", sub: "14 years", category: "Year Coins", qty: 0 },
+  { name: "XV Year Coin", sub: "15 years", category: "Year Coins", qty: 0 },
+  { name: "XVI Year Coin", sub: "16 years", category: "Year Coins", qty: 0 },
+  { name: "XVII Year Coin", sub: "17 years", category: "Year Coins", qty: 0 },
+  { name: "XVIII Year Coin", sub: "18 years", category: "Year Coins", qty: 0 },
+  { name: "XIX Year Coin", sub: "19 years", category: "Year Coins", qty: 0 },
+  { name: "XX Year Coin", sub: "20 years", category: "Year Coins", qty: 0 },
+  { name: "XXI Year Coin", sub: "21 years", category: "Year Coins", qty: 0 },
+  { name: "XXII Year Coin", sub: "22 years", category: "Year Coins", qty: 0 },
+  { name: "XXIII Year Coin", sub: "23 years", category: "Year Coins", qty: 0 },
+  { name: "XXIV Year Coin", sub: "24 years", category: "Year Coins", qty: 0 },
+  { name: "XXV Year Coin", sub: "25 years", category: "Year Coins", qty: 0 },
+  { name: "XXVI Year Coin", sub: "26 years", category: "Year Coins", qty: 0 },
+  { name: "XXVII Year Coin", sub: "27 years", category: "Year Coins", qty: 0 },
+  { name: "XXVIII Year Coin", sub: "28 years", category: "Year Coins", qty: 0 },
+  { name: "XXIX Year Coin", sub: "29 years", category: "Year Coins", qty: 0 },
+  { name: "XXX Year Coin", sub: "30 years", category: "Year Coins", qty: 0 },
+  { name: "XXXI Year Coin", sub: "31 years", category: "Year Coins", qty: 0 },
+  { name: "XXXII Year Coin", sub: "32 years", category: "Year Coins", qty: 0 },
+  { name: "XXXIII Year Coin", sub: "33 years", category: "Year Coins", qty: 0 },
+  { name: "XXXIV Year Coin", sub: "34 years", category: "Year Coins", qty: 0 },
+  { name: "XXXV Year Coin", sub: "35 years", category: "Year Coins", qty: 0 },
+  { name: "XXXVI Year Coin", sub: "36 years", category: "Year Coins", qty: 0 },
+  { name: "XXXVII Year Coin", sub: "37 years", category: "Year Coins", qty: 0 },
+  { name: "XXXVIII Year Coin", sub: "38 years", category: "Year Coins", qty: 0 },
+  { name: "XXXIX Year Coin", sub: "39 years", category: "Year Coins", qty: 0 },
+  { name: "XL Year Coin", sub: "40 years", category: "Year Coins", qty: 0 },
+  { name: "XLI Year Coin", sub: "41 years", category: "Year Coins", qty: 0 },
+  { name: "XLII Year Coin", sub: "42 years", category: "Year Coins", qty: 0 },
+  { name: "XLIII Year Coin", sub: "43 years", category: "Year Coins", qty: 0 },
+  { name: "XLIV Year Coin", sub: "44 years", category: "Year Coins", qty: 0 },
+  { name: "XLV Year Coin", sub: "45 years", category: "Year Coins", qty: 0 },
+  { name: "XLVI Year Coin", sub: "46 years", category: "Year Coins", qty: 0 },
+  { name: "XLVII Year Coin", sub: "47 years", category: "Year Coins", qty: 0 },
+  { name: "XLVIII Year Coin", sub: "48 years", category: "Year Coins", qty: 0 },
+  { name: "XLIX Year Coin", sub: "49 years", category: "Year Coins", qty: 0 },
+  { name: "L Year Coin", sub: "50 years", category: "Year Coins", qty: 0 },
+];
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+
+let state = {
+  sheetId: localStorage.getItem('sheetId') || '',
+  lit: [],
+  chips: [],
+  litCounts: {},
+  chipsCounts: {},
+};
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+
+async function init() {
+  const savedSheetId = localStorage.getItem('sheetId');
+  if (savedSheetId) {
+    document.getElementById('sheetId').value = savedSheetId;
+    state.sheetId = savedSheetId;
+    await loadFromSheet();
+  } else {
+    // Load defaults
+    state.lit = JSON.parse(JSON.stringify(DEFAULT_LIT));
+    state.chips = JSON.parse(JSON.stringify(DEFAULT_CHIPS));
+    renderAll();
+  }
+}
+
+// ─── SHEET I/O ───────────────────────────────────────────────────────────────
+
+// Uses Google Sheets API v4 (public, read via JSON feed; write via gapi if configured)
+// For simplicity, we use the published CSV export for reading and Apps Script for writing.
+// The user publishes their sheet as CSV, and the write goes to an Apps Script web app URL.
+
+function getSheetId() {
+  const val = document.getElementById('sheetId').value.trim();
+  state.sheetId = val;
+  localStorage.setItem('sheetId', val);
+  return val;
+}
+
+async function loadFromSheet() {
+  const sheetId = getSheetId();
+  if (!sheetId) {
+    document.getElementById('configNotice').classList.remove('hidden');
+    state.lit = JSON.parse(JSON.stringify(DEFAULT_LIT));
+    state.chips = JSON.parse(JSON.stringify(DEFAULT_CHIPS));
+    renderAll();
+    return;
+  }
+
+  try {
+    // Tab 1: Literature (gid=0), Tab 2: Chips (gid=1)
+    const litUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Literature`;
+    const chipsUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Chips`;
+
+    const [litData, chipsData] = await Promise.all([
+      fetchSheetData(litUrl),
+      fetchSheetData(chipsUrl),
+    ]);
+
+    if (litData) state.lit = litData;
+    if (chipsData) state.chips = chipsData;
+
+    document.getElementById('configNotice').classList.add('hidden');
+    renderAll();
+  } catch (e) {
+    console.error('Sheet load error:', e);
+    document.getElementById('configNotice').classList.remove('hidden');
+    state.lit = JSON.parse(JSON.stringify(DEFAULT_LIT));
+    state.chips = JSON.parse(JSON.stringify(DEFAULT_CHIPS));
+    renderAll();
+  }
+}
+
+async function fetchSheetData(url) {
+  const res = await fetch(url);
+  const text = await res.text();
+  // Strip Google's JSONP wrapper
+  const json = JSON.parse(text.replace(/^.*?({.*}).*?$/s, '$1'));
+  const rows = json.table.rows;
+  return rows.map(row => {
+    const cells = row.c;
+    const item = {
+      name: cells[0]?.v || '',
+      qty: parseInt(cells[1]?.v) || 0,
+    };
+    if (cells[2]?.v) item.sub = cells[2].v;
+    if (cells[3]?.v) item.category = cells[3].v;
+    return item;
+  }).filter(r => r.name);
+}
+
+async function saveSettings(type) {
+  const sheetId = getSheetId();
+  const statusEl = document.getElementById(type === 'lit' ? 'litSaveStatus' : 'chipsSaveStatus');
+
+  if (!sheetId) {
+    statusEl.textContent = 'No Sheet ID configured.';
+    statusEl.className = 'save-status err';
+    return;
+  }
+
+  // Read current qty values from settings inputs
+  const items = type === 'lit' ? state.lit : state.chips;
+  const inputs = document.querySelectorAll(`#${type}SettingsList .qty-input`);
+  inputs.forEach((inp, i) => {
+    if (items[i]) items[i].qty = parseInt(inp.value) || 0;
+  });
+
+  // Build CSV data
+  const sheetName = type === 'lit' ? 'Literature' : 'Chips';
+  const rows = items.map(item => {
+    const parts = [item.name, item.qty];
+    if (item.sub) parts.push(item.sub);
+    if (item.category) parts.push(item.category);
+    return parts.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
+  });
+  const csv = rows.join('\n');
+
+  statusEl.textContent = 'Saving…';
+  statusEl.className = 'save-status';
+
+  // Check if Apps Script URL is configured
+  const scriptUrl = localStorage.getItem('appsScriptUrl');
+  if (!scriptUrl) {
+    // Fallback: save to localStorage and remind user about Apps Script
+    localStorage.setItem(`data_${type}`, JSON.stringify(items));
+    statusEl.textContent = '✓ Saved locally. Configure Apps Script URL to sync to Google Sheet.';
+    statusEl.className = 'save-status ok';
+    renderCountTab(type);
+    return;
+  }
+
+  try {
+    const url = `${scriptUrl}?sheet=${encodeURIComponent(sheetName)}&data=${encodeURIComponent(JSON.stringify(items))}`;
+    const res = await fetch(url);
+    const result = await res.json();
+    if (result.status === 'ok') {
+      statusEl.textContent = '✓ Saved to Google Sheet.';
+      statusEl.className = 'save-status ok';
+    } else {
+      throw new Error(result.message);
+    }
+  } catch (e) {
+    localStorage.setItem(`data_${type}`, JSON.stringify(items));
+    statusEl.textContent = '✓ Saved locally (sheet sync failed — check Apps Script URL).';
+    statusEl.className = 'save-status ok';
+  }
+
+  renderCountTab(type);
+}
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+
+function renderAll() {
+  renderSettingsTab('lit');
+  renderSettingsTab('chips');
+  renderCountTab('lit');
+  renderCountTab('chips');
+}
+
+function renderSettingsTab(type) {
+  const items = type === 'lit' ? state.lit : state.chips;
+  const container = document.getElementById(type === 'lit' ? 'litSettingsList' : 'chipsSettingsList');
+
+  if (!items.length) {
+    container.innerHTML = '<div style="padding:1.5rem; text-align:center; color:var(--text-faint); font-style:italic; font-size:0.9rem;">No items loaded.</div>';
+    return;
+  }
+
+  let html = '';
+  let lastCategory = null;
+
+  items.forEach((item, i) => {
+    if (item.category && item.category !== lastCategory) {
+      html += `<div class="chip-category">${item.category}</div>`;
+      lastCategory = item.category;
+    }
+    html += `
+      <div class="settings-row">
+        <div>
+          <div class="item-name">${item.name}</div>
+          ${item.sub ? `<div class="item-sub">${item.sub}</div>` : ''}
+        </div>
+        <input class="qty-input" type="number" min="0" value="${item.qty}" data-index="${i}" 
+               onchange="updateSettingsQty('${type}', ${i}, this.value)" />
+      </div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+function updateSettingsQty(type, index, value) {
+  const items = type === 'lit' ? state.lit : state.chips;
+  if (items[index]) items[index].qty = parseInt(value) || 0;
+}
+
+function renderCountTab(type) {
+  const items = type === 'lit' ? state.lit : state.chips;
+  const counts = type === 'lit' ? state.litCounts : state.chipsCounts;
+  const container = document.getElementById(type === 'lit' ? 'litCountList' : 'chipsCountList');
+
+  const active = items.filter(item => item.qty > 0);
+
+  if (!active.length) {
+    container.innerHTML = '<div style="padding:1.5rem; text-align:center; color:var(--text-faint); font-style:italic; font-size:0.9rem;">No items with quantities set. Configure in Settings.</div>';
+    return;
+  }
+
+  let html = '';
+  let lastCategory = null;
+
+  active.forEach((item, i) => {
+    if (item.category && item.category !== lastCategory) {
+      html += `<div class="chip-category">${item.category}</div>`;
+      lastCategory = item.category;
+    }
+    const counted = counts[item.name];
+    const hasCounted = counted !== undefined && counted !== '';
+    const dot = hasCounted
+      ? (counted >= item.qty ? 'ok' : 'low')
+      : '';
+    html += `
+      <div class="count-row">
+        <div>
+          <div class="item-name">${item.name}</div>
+          ${item.sub ? `<div class="item-sub">${item.sub}</div>` : ''}
+        </div>
+        <span class="target-label">target: ${item.qty}</span>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span class="status-dot ${dot}" id="dot_${type}_${i}"></span>
+          <input class="qty-input ${hasCounted ? 'highlight' : ''}" type="number" min="0" 
+                 placeholder="—"
+                 value="${hasCounted ? counted : ''}"
+                 onchange="updateCount('${type}', '${item.name}', this.value, ${i}, this)"
+                 oninput="updateCount('${type}', '${item.name}', this.value, ${i}, this)" />
+        </div>
+      </div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+function updateCount(type, name, value, idx, el) {
+  const counts = type === 'lit' ? state.litCounts : state.chipsCounts;
+  const items = type === 'lit' ? state.lit : state.chips;
+  const item = items.find(i => i.name === name);
+  counts[name] = value === '' ? '' : parseInt(value) || 0;
+
+  const dot = document.getElementById(`dot_${type}_${idx}`);
+  if (dot && item) {
+    if (value === '') {
+      dot.className = 'status-dot';
+      el.classList.remove('highlight');
+    } else {
+      const n = parseInt(value) || 0;
+      dot.className = `status-dot ${n >= item.qty ? 'ok' : 'low'}`;
+      el.classList.add('highlight');
+    }
+  }
+}
+
+function clearCounts(type) {
+  if (type === 'lit') state.litCounts = {};
+  else state.chipsCounts = {};
+  renderCountTab(type);
+  document.getElementById(type === 'lit' ? 'litOutput' : 'chipsOutput').classList.remove('visible');
+}
+
+// ─── ORDER GENERATION ─────────────────────────────────────────────────────────
+
+function generateOrder(type) {
+  const items = type === 'lit' ? state.lit : state.chips;
+  const counts = type === 'lit' ? state.litCounts : state.chipsCounts;
+  const active = items.filter(item => item.qty > 0);
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+  const needed = [];
+  const ok = [];
+  const missing = [];
+
+  active.forEach(item => {
+    const counted = counts[item.name];
+    if (counted === undefined || counted === '') {
+      missing.push(item.name);
+    } else {
+      const n = parseInt(counted);
+      const diff = item.qty - n;
+      if (diff > 0) needed.push({ name: item.name, have: n, need: diff, target: item.qty });
+      else ok.push({ name: item.name, have: n, target: item.qty });
+    }
+  });
+
+  const typeLabel = type === 'lit' ? 'Literature' : 'Chips & Coins';
+  let out = `${typeLabel.toUpperCase()} ORDER REPORT\n`;
+  out += `${dateStr}\n`;
+  out += `${'─'.repeat(42)}\n\n`;
+
+  if (needed.length) {
+    out += `ITEMS TO ORDER (${needed.length}):\n\n`;
+    needed.forEach(item => {
+      out += `  ${item.name}\n`;
+      out += `    On hand: ${item.have}  |  Target: ${item.target}  |  Order: ${item.need}\n\n`;
+    });
+  } else {
+    out += `✓ All items are fully stocked.\n\n`;
+  }
+
+  if (ok.length) {
+    out += `${'─'.repeat(42)}\n`;
+    out += `FULLY STOCKED (${ok.length}):\n\n`;
+    ok.forEach(item => {
+      out += `  ${item.name} — ${item.have} on hand (target: ${item.target})\n`;
+    });
+    out += '\n';
+  }
+
+  if (missing.length) {
+    out += `${'─'.repeat(42)}\n`;
+    out += `NOT COUNTED (${missing.length}):\n\n`;
+    missing.forEach(name => out += `  ${name}\n`);
+    out += '\n';
+  }
+
+  out += `${'─'.repeat(42)}\n`;
+  out += `Generated by Meeting Inventory Tool`;
+
+  const outputId = type === 'lit' ? 'litOutput' : 'chipsOutput';
+  const textId = type === 'lit' ? 'litOutputText' : 'chipsOutputText';
+  document.getElementById(textId).textContent = out;
+  document.getElementById(outputId).classList.add('visible');
+  document.getElementById(outputId).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ─── UTILITY ─────────────────────────────────────────────────────────────────
+
+function copyOutput(id) {
+  const text = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = event.target;
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 1800);
+  });
+}
+
+function printOutput(id) {
+  const text = document.getElementById(id).textContent;
+  const w = window.open('', '_blank');
+  w.document.write(`<pre style="font-family:monospace;font-size:13px;padding:2rem;">${text}</pre>`);
+  w.document.close();
+  w.print();
+}
+
+function showTab(tab) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById(`tab-${tab}`).classList.add('active');
+  event.target.classList.add('active');
+
+  if (tab === 'settings') {
+    const id = localStorage.getItem('sheetId') || '';
+    document.getElementById('sheetId').value = id;
+    // Also show Apps Script URL field if not set
+    if (!localStorage.getItem('appsScriptUrl')) {
+      showAppsScriptField();
+    }
+  }
+}
+
+function showAppsScriptField() {
+  const existing = document.getElementById('appsScriptField');
+  if (existing) return;
+  const sc = document.querySelector('.sheet-config');
+  const div = document.createElement('div');
+  div.id = 'appsScriptField';
+  div.style.marginTop = '0.75rem';
+  div.innerHTML = `
+    <label style="display:block;font-weight:500;margin-bottom:0.5rem;color:var(--accent);">Apps Script Web App URL <span style="font-weight:400;color:var(--text-faint);font-style:italic;">(optional — for saving back to sheet)</span></label>
+    <input type="text" id="appsScriptUrl" style="font-family:var(--font-mono);font-size:0.82rem;width:100%;border:1px solid var(--accent-border);border-radius:var(--radius);padding:0.5rem 0.75rem;background:var(--surface);color:var(--text);" placeholder="https://script.google.com/macros/s/.../exec" value="${localStorage.getItem('appsScriptUrl') || ''}" />
+    <p class="hint" style="font-size:0.78rem;color:var(--text-muted);margin-top:0.4rem;font-style:italic;">See setup guide for how to create this. Without it, changes save locally only.</p>
+    <button class="secondary" style="margin-top:0.5rem;" onclick="saveAppsScriptUrl()">Save URL</button>
+  `;
+  sc.appendChild(div);
+}
+
+function saveAppsScriptUrl() {
+  const url = document.getElementById('appsScriptUrl')?.value.trim();
+  if (url) localStorage.setItem('appsScriptUrl', url);
+}
+
+// ─── BOOT ─────────────────────────────────────────────────────────────────────
+
+init();
+</script>
+</body>
+</html>
