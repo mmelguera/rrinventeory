@@ -655,10 +655,15 @@ const DEFAULT_CHIPS = [
   { name: "L Year Coin", sub: "50 years", category: "Year Coins", qty: 0 },
 ];
 
+// ─── HARDCODED CONFIG ────────────────────────────────────────────────────────
+
+const HARDCODED_SHEET_ID = '16kgCXSl3Qq0eiWYUzE10BqBRmK4PWKpF60ADuCDr7zk';
+const HARDCODED_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyy7ZjkaKiz5mHKFTh_pbKwei1PxbyEKZA2OLkrG4T2xLzIww8bUgZh2eWH9mtdkXA-Uw/exec';
+
 // ─── STATE ───────────────────────────────────────────────────────────────────
 
 let state = {
-  sheetId: localStorage.getItem('sheetId') || '',
+  sheetId: HARDCODED_SHEET_ID,
   lit: [],
   chips: [],
   litCounts: {},
@@ -668,30 +673,15 @@ let state = {
 // ─── INIT ────────────────────────────────────────────────────────────────────
 
 async function init() {
-  const savedSheetId = localStorage.getItem('sheetId');
-  if (savedSheetId) {
-    document.getElementById('sheetId').value = savedSheetId;
-    state.sheetId = savedSheetId;
-    await loadFromSheet();
-  } else {
-    // Load defaults
-    state.lit = JSON.parse(JSON.stringify(DEFAULT_LIT));
-    state.chips = JSON.parse(JSON.stringify(DEFAULT_CHIPS));
-    renderAll();
-  }
+  document.getElementById('sheetId').value = HARDCODED_SHEET_ID;
+  document.getElementById('configNotice').classList.add('hidden');
+  await loadFromSheet();
 }
 
 // ─── SHEET I/O ───────────────────────────────────────────────────────────────
 
-// Uses Google Sheets API v4 (public, read via JSON feed; write via gapi if configured)
-// For simplicity, we use the published CSV export for reading and Apps Script for writing.
-// The user publishes their sheet as CSV, and the write goes to an Apps Script web app URL.
-
 function getSheetId() {
-  const val = document.getElementById('sheetId').value.trim();
-  state.sheetId = val;
-  localStorage.setItem('sheetId', val);
-  return val;
+  return HARDCODED_SHEET_ID;
 }
 
 async function loadFromSheet() {
@@ -777,7 +767,7 @@ async function saveSettings(type) {
   statusEl.className = 'save-status';
 
   // Check if Apps Script URL is configured
-  const scriptUrl = localStorage.getItem('appsScriptUrl');
+  const scriptUrl = HARDCODED_SCRIPT_URL;
   if (!scriptUrl) {
     // Fallback: save to localStorage and remind user about Apps Script
     localStorage.setItem(`data_${type}`, JSON.stringify(items));
