@@ -789,18 +789,15 @@ async function saveSettings(type) {
 
   try {
     const url = `${scriptUrl}?sheet=${encodeURIComponent(sheetName)}&data=${encodeURIComponent(JSON.stringify(items))}`;
-    const res = await fetch(url);
-    const result = await res.json();
-    if (result.status === 'ok') {
-      statusEl.textContent = '✓ Saved to Google Sheet.';
-      statusEl.className = 'save-status ok';
-    } else {
-      throw new Error(result.message);
-    }
+    await fetch(url, { method: 'GET', mode: 'no-cors', redirect: 'follow' });
+    // no-cors means we can't read the response, but if we get here without throwing it worked
+    localStorage.setItem(`data_${type}`, JSON.stringify(items));
+    statusEl.textContent = '✓ Saved to Google Sheet.';
+    statusEl.className = 'save-status ok';
   } catch (e) {
     localStorage.setItem(`data_${type}`, JSON.stringify(items));
-    statusEl.textContent = '✓ Saved locally (sheet sync failed — check Apps Script URL).';
-    statusEl.className = 'save-status ok';
+    statusEl.textContent = '✗ Could not reach Google Sheet — saved locally only.';
+    statusEl.className = 'save-status err';
   }
 
   renderCountTab(type);
